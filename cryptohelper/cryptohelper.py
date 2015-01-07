@@ -61,9 +61,9 @@ def block_pad_PKCS7(block, blocklen):
 def data_pad_PKCS7(data, blocklen):
 	blocks = block_split(data, blocklen)
 	if len(blocks[-1]) < blocklen:
-		blocks[-1] = block_add_padding(blocks[-1], blocklen)
+		blocks[-1] = block_pad_PKCS7(blocks[-1], blocklen)
 	else:
-		blocks.append(block_add_padding('', blocklen))
+		blocks.append(block_pad_PKCS7('', blocklen))
 	return block_join(blocks)
 
 
@@ -78,6 +78,7 @@ def decrypt_block_AES(ct, key):
 
 
 def encrypt_block_ECB(pt, blocklen, key, prf):
+	pt = data_pad_PKCS7(pt, blocklen)
 	blocks_pt = block_split(pt, blocklen)
 	blocks_ct = [None] * len(blocks_pt)
 	for i in range(len(blocks_pt)):
@@ -86,10 +87,15 @@ def encrypt_block_ECB(pt, blocklen, key, prf):
 
 
 def decrypt_block_ECB(ct, blocklen, key, prf):
-	return encrypt_block_ECB(ct, blocklen, key, prf)
+	blocks_ct = block_split(ct, blocklen)
+	blocks_pt = [None] * len(blocks_ct)
+	for i in range(len(blocks_pt)):
+		blocks_pt[i] = prf(blocks_ct[i], key)
+	return block_join(blocks_pt)
 
 
 def encrypt_block_CBC(pt, blocklen, iv, key, prf):
+	pt = data_pad_PKCS7(pt, blocklen)
 	blocks_pt = block_split(pt, blocklen)
 	blocks_ct = [None] * len(blocks_pt)
 	prev_block = iv
