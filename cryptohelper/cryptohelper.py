@@ -42,7 +42,7 @@ def encrypt_stream_XOR(pt, key):
 
 
 def decrypt_stream_XOR(ct, key):
-	return cryptoxor(pt, key)
+	return cryptoxor(ct, key)
 
 
 def block_split(data, blocklen):
@@ -178,6 +178,69 @@ def unique_blocks_ratio(text, blocklen, numblocks=None):
 	if (numblocks == None):
 		numblocks = len(text)/blocklen
 
+	# TODO: Use block_split
 	unique_chunks = set([text[i*blocklen:(i+1)*blocklen] for i in range(numblocks)])
 
 	return float(len(unique_chunks))/numblocks
+
+
+def oracle_blocksize(challenge, maxblocksize=128):
+	init_len = len(challenge(''))
+	for i in range(maxblocksize):
+		pt = "A"*i
+		blocksize = len(challenge(pt)) - init_len
+		if blocksize != 0:
+			break
+	return blocksize
+
+
+def oracle_isECB(challenge, blocksize=16):
+	ct = challenge("A"*1024)
+	if unique_blocks_ratio(ct, blocksize) < 1:
+		return True
+	else:
+		return False
+
+
+def oracle_ECB_prefix_len(challenge, blocksize):
+	ct_blocks = block_split(challenge("A"*1024), blocksize)
+	for limit_idx in range(len(ct_blocks)-1):
+		if ct_blocks[limit_idx] == ct_blocks[limit_idx+1]:
+			limit_block = ct_blocks[limit_idx]
+			break
+
+	for i in range(blocksize):
+		ct_blocks = block_split(challenge("X"*i + "A"*1024), blocksize)
+		if ct_blocks[limit_idx] != limit_block:
+			break
+
+	return (limit_idx*16)-(i-1)
+
+
+def oracle_ECB_decrypt(challenge, ctlen, blocksize, charset, prefix_len=0):
+	prefix_align = (blocksize-prefix_len)%blocksize
+	prefix_blocks = int(math.ceil(float(prefix_len)/blocksize))
+	guess_pt = 'A'*(prefix_align+blocksize)
+	for j in range(0,ctlen):
+		i = j%blocksize
+		base_index = guess_pt[-(blocksize-1):]
+		if i != 0:
+			base_shot =  guess_pt[-(blocksize-1):-i]
+		else:
+			base_shot =  guess_pt[-(blocksize-1):]
+
+		pt = 'A'*prefix_align
+		for ch in charset:
+			pt = pt + base_index + ch
+
+		index_ct = block_split(challenge(pt), blocksize)
+
+		b = block_split(challenge('A'*prefix_align+base_shot), blocksize)
+
+
+		if b[prefix_blocks+j/blocksize] in index_ct:
+			k = index_ct.index(b[prefix_blocks+j/blocksize])
+			guess_pt = guess_pt + charset[k-prefix_blocks]
+		else:
+			break
+	return guess_pt[blocksize+prefix_align:]
