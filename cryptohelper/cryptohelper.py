@@ -67,6 +67,18 @@ def data_pad_PKCS7(data, blocklen):
 	return block_join(blocks)
 
 
+def block_unpad_PKCS7(block):
+	pad = ord(block[-1])
+	for ch in block[-pad:]:
+		if ord(ch) != pad:
+			raise Exception('BAD PADDING')
+	return block[:-pad]
+
+
+def data_unpad_PKCS7(data):
+	return block_unpad_PKCS7(data)
+
+
 def encrypt_block_AES(pt, key):
 	aes = AES.new(key, AES.MODE_ECB)
 	return aes.encrypt(pt)
