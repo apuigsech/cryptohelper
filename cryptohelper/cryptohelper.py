@@ -45,7 +45,7 @@ def decrypt_stream_XOR(ct, key):
 	return cryptoxor(ct, key)
 
 
-def block_split(data, blocklen):
+def block_split(data, blocklen=16):
 	return [data[i*blocklen:(i+1)*blocklen] for i in range(int(math.ceil(float(len(data))/blocklen)))]
 
 
@@ -103,7 +103,7 @@ def decrypt_block_ECB(ct, blocklen, key, prf):
 	blocks_pt = [None] * len(blocks_ct)
 	for i in range(len(blocks_pt)):
 		blocks_pt[i] = prf(blocks_ct[i], key)
-	return block_join(blocks_pt)
+	return data_unpad_PKCS7(block_join(blocks_pt))
 
 
 def encrypt_block_CBC(pt, blocklen, iv, key, prf):
@@ -124,7 +124,7 @@ def decrypt_block_CBC(ct, blocklen, iv, key, prf):
 	for i in range(len(blocks_pt)):
 		blocks_pt[i] = strxor(prf(blocks_ct[i], key), prev_block)
 		prev_block = blocks_ct[i]
-	return block_join(blocks_pt)
+	return data_unpad_PKCS7(block_join(blocks_pt))
 
 
 
