@@ -23,6 +23,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 import math
+import struct
 from Crypto.Cipher import AES
 
 def strxor(a, b):
@@ -126,6 +127,23 @@ def decrypt_block_CBC(ct, blocklen, iv, key, prf):
 		prev_block = blocks_ct[i]
 	return data_unpad_PKCS7(block_join(blocks_pt))
 
+
+def keystream_block_CTR(blocklen, numblocks, nonce, key, prf):
+	ks = ''
+	counterlen = blocklen - len(nonce)
+	for c in range(numblocks):
+		pt = "{0}{1}".format(nonce, struct.pack('L', c)[:counterlen])
+		ks += prf(pt, key)
+	return ks
+
+def encrypt_block_CTR(pt, blocklen, nonce, key, prf):
+	ks = keystream_block_CTR(blocklen, int(math.ceil(float(len(ct))/blocklen)), nonce, key, prf)
+	return strxor(ks, pt)
+
+
+def decrypt_block_CTR(ct, blocklen, nonce, key, prf):
+	ks = keystream_block_CTR(blocklen, int(math.ceil(float(len(ct))/blocklen)), nonce, key, prf)
+	return strxor(ks, ct)
 
 
 def hamming_distance(s1, s2):
