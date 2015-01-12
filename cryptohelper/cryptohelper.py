@@ -128,21 +128,26 @@ def decrypt_block_CBC(ct, blocklen, iv, key, prf):
 	return data_unpad_PKCS7(block_join(blocks_pt))
 
 
-def keystream_block_CTR(blocklen, numblocks, nonce, key, prf):
+def keystream_block_CTR(blocklen, numblocks, nonce, key, prf, le_counter):
 	ks = ''
-	counterlen = blocklen - len(nonce)
-	for c in range(numblocks):
-		pt = "{0}{1}".format(nonce, struct.pack('L', c)[:counterlen])
+	if le_counter == True:
+		struct_str = 'QQ'
+	else:
+		struct_str = '>QQ'
+	static,counter = struct.unpack(struct_str, nonce)
+	for i in range(numblocks):
+		pt = struct.pack(struct_str, static, counter)
 		ks += prf(pt, key)
+		counter += 1
 	return ks
 
-def encrypt_block_CTR(pt, blocklen, nonce, key, prf):
-	ks = keystream_block_CTR(blocklen, int(math.ceil(float(len(ct))/blocklen)), nonce, key, prf)
+def encrypt_block_CTR(pt, blocklen, nonce, key, prf, le_counter=False):
+	ks = keystream_block_CTR(blocklen, int(math.ceil(float(len(ct))/blocklen)), nonce, key, prf, le_counter)
 	return strxor(ks, pt)
 
 
-def decrypt_block_CTR(ct, blocklen, nonce, key, prf):
-	ks = keystream_block_CTR(blocklen, int(math.ceil(float(len(ct))/blocklen)), nonce, key, prf)
+def decrypt_block_CTR(ct, blocklen, nonce, key, prf, le_counter=False):
+	ks = keystream_block_CTR(blocklen, int(math.ceil(float(len(ct))/blocklen)), nonce, key, prf, le_counter)
 	return strxor(ks, ct)
 
 
@@ -162,7 +167,7 @@ def bit_hamming_distance(s1, s2):
 
 
 freq_eng = {
-	'a':8.167, 'b':1.492, 'c':2.782,'d':4.253,'e':12.702,'f':2.228,'g':2.015,'h':6.094,
+	'a':8.167,'b':1.492, 'c':2.782,'d':4.253,'e':12.702,'f':2.228,'g':2.015,'h':6.094,
 	'i':6.966,'j':0.153,'k':0.772,'l':4.025,'m':2.406,'n':6.749,'o':7.507,'p':1.929,
 	'q':0.095,'r':5.987,'s':6.327,'t':9.056,'u':2.758,'v':0.978,'w':2.360,'x':0.150,
 	'y':1.974,'z':0.074
