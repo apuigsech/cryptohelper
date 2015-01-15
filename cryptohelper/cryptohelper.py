@@ -36,7 +36,7 @@ def mt_init(seed):
 	for i in range(1,624):
 		mt_matrix.append(((1812433253 * (mt_matrix[i-1] ^ (mt_matrix[i-1]>>30)) + i)) & 0xffffffff)
 
-	return (mt_idx, mt_matrix)
+	return [mt_idx, mt_matrix]
 
 
 def mt_gen_numbers(state):
@@ -50,8 +50,8 @@ def mt_gen_numbers(state):
 
 
 def mt_next(state):
-	mt_idx = state [0]
-	mt_matrix = state [1]
+	mt_idx = state[0]
+	mt_matrix = state[1]
 
 	if mt_idx == 0:
 		mt_gen_numbers(state)
@@ -63,6 +63,8 @@ def mt_next(state):
 	y = y ^ (y>>18)
 
 	mt_idx = (mt_idx + 1)%624
+
+	state[0] = mt_idx
 
 	return y
 
