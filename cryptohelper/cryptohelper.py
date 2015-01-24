@@ -216,7 +216,7 @@ def decrypt_mt(ct, key):
 def _left_rotate(n, b):
     return ((n << b) | (n >> (32 - b))) & 0xffffffff
 
-def sha1_round(block, s=[0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0]):
+def sha1_round(block, s):
     block = block[:64]
     chunks = block_split(block, 4)
     w = [struct.unpack('>I', x)[0] for x in chunks] + [0]*64
@@ -247,19 +247,25 @@ def sha1_round(block, s=[0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0]
     return o
 
 
-def sha1(m):
-    s=[0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0]
-    l = len(m)
-    m += '\x80'
-    m += '\x00' * ((56-(l+1)%64)%64)
-    m += struct.pack('>Q', l*8)
+def sha1_pad(m, l=None):
+	if l == None:
+		l = len(m)
+	m += '\x80'
+	m += '\x00' * ((56-(l+1)%64)%64)
+	m += struct.pack('>Q', l*8)
+	return m
 
-    blocks = block_split(m, 64)
 
-    for b in blocks:
-        s = sha1_round(b, s)
+def sha1(m, s=[0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0], pad=True):
+	if pad == True:
+  		m = sha1_pad(m)
 
-    return struct.pack(">IIIII", s[0],s[1],s[2],s[3],s[4])
+	blocks = block_split(m, 64)
+
+	for b in blocks:
+		s = sha1_round(b, s)
+
+	return struct.pack(">IIIII", s[0],s[1],s[2],s[3],s[4])
 
 
 def hamming_distance(s1, s2):
