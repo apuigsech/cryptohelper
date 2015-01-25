@@ -247,18 +247,25 @@ def sha1_round(block, s):
     return o
 
 
-def sha1_pad(m, l=None):
+def message_pad(m, l=None, endian='B'):
+	if endian == 'B':
+		endian = '>'
+	else:
+		endian = '<'
+
 	if l == None:
 		l = len(m)
+
 	m += '\x80'
 	m += '\x00' * ((56-(l+1)%64)%64)
-	m += struct.pack('>Q', l*8)
+	m += struct.pack(endian+'Q', l*8)
+
 	return m
 
 
 def sha1(m, s=[0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0], pad=True):
 	if pad == True:
-  		m = sha1_pad(m)
+  		m = message_pad(m, endian='B')
 
 	blocks = block_split(m, 64)
 
@@ -266,6 +273,100 @@ def sha1(m, s=[0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0], pad=True
 		s = sha1_round(b, s)
 
 	return struct.pack(">IIIII", s[0],s[1],s[2],s[3],s[4])
+
+
+def md4(m, s=[0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476], pad=True):
+    if pad == True:
+        m = message_pad(m, endian='L')
+
+	blocks = block_split(m, 64)
+
+	for b in blocks:
+		s = md4_round(b, s)
+
+	return struct.pack("<IIII", s[0],s[1],s[2],s[3])
+
+
+
+def md4_round(block, s):
+    block = block[:64]
+    chunks = block_split(block, 4)
+    w = [struct.unpack('<I', x)[0] for x in chunks]
+
+    a, b, c, d = s
+
+    def F(x,y,z): return ((x & y) | ((~x) & z))
+    def G(x,y,z): return (x & y) | (x & z) | (y & z)
+    def H(x,y,z): return x ^ y ^ z
+
+    def FF(a,b,c,d,k,n): return _left_rotate((a + F(b,c,d) + w[k]) & 0xFFFFFFFF, n)
+    def GG(a,b,c,d,k,n): return _left_rotate((a + G(b,c,d) + w[k] + 0x5A827999) & 0xFFFFFFFF, n)
+    def HH(a,b,c,d,k,n): return _left_rotate((a + H(b,c,d) + w[k]+ 0x6ED9EBA1) & 0xFFFFFFFF, n)
+
+
+    a = FF(a,b,c,d,0,3)
+    d = FF(d,a,b,c,1,7)
+    c = FF(c,d,a,b,2,11)
+    b = FF(b,c,d,a,3,19)
+
+    a = FF(a,b,c,d,4,3)
+    d = FF(d,a,b,c,5,7)
+    c = FF(c,d,a,b,6,11)
+    b = FF(b,c,d,a,7,19)
+
+    a = FF(a,b,c,d,8,3)
+    d = FF(d,a,b,c,9,7)
+    c = FF(c,d,a,b,10,11)
+    b = FF(b,c,d,a,11,19)
+
+    a = FF(a,b,c,d,12,3)
+    d = FF(d,a,b,c,13,7)
+    c = FF(c,d,a,b,14,11)
+    b = FF(b,c,d,a,15,19)
+
+    a = GG(a,b,c,d,0,3)
+    d = GG(d,a,b,c,4,5)
+    c = GG(c,d,a,b,8,9)
+    b = GG(b,c,d,a,12,13)
+
+    a = GG(a,b,c,d,1,3)
+    d = GG(d,a,b,c,5,5)
+    c = GG(c,d,a,b,9,9)
+    b = GG(b,c,d,a,13,13)
+
+    a = GG(a,b,c,d,2,3)
+    d = GG(d,a,b,c,6,5)
+    c = GG(c,d,a,b,10,9)
+    b = GG(b,c,d,a,14,13)
+
+    a = GG(a,b,c,d,3,3)
+    d = GG(d,a,b,c,7,5)
+    c = GG(c,d,a,b,11,9)
+    b = GG(b,c,d,a,15,13)
+
+    a = HH(a,b,c,d,0,3)
+    d = HH(d,a,b,c,8,9)
+    c = HH(c,d,a,b,4,11)
+    b = HH(b,c,d,a,12,15)
+
+    a = HH(a,b,c,d,2,3)
+    d = HH(d,a,b,c,10,9)
+    c = HH(c,d,a,b,6,11)
+    b = HH(b,c,d,a,14,15)
+
+    a = HH(a,b,c,d,1,3)
+    d = HH(d,a,b,c,9,9)
+    c = HH(c,d,a,b,5,11)
+    b = HH(b,c,d,a,13,15)
+
+    a = HH(a,b,c,d,3,3)
+    d = HH(d,a,b,c,11,9)
+    c = HH(c,d,a,b,7,11)
+    b = HH(b,c,d,a,15,15)
+
+    o = [s[0]+a & 0xffffffff, s[1]+b & 0xffffffff, s[2]+c & 0xffffffff, s[3]+d & 0xffffffff]
+
+    return o
 
 
 def hamming_distance(s1, s2):
