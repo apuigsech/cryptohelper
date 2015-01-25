@@ -276,8 +276,8 @@ def sha1(m, s=[0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0], pad=True
 
 
 def md4(m, s=[0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476], pad=True):
-    if pad == True:
-        m = message_pad(m, endian='L')
+	if pad == True:
+		m = message_pad(m, endian='L')
 
 	blocks = block_split(m, 64)
 
