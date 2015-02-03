@@ -69,6 +69,16 @@ def mt_next(state):
 	return y
 
 
+def modexp (g, u, p):
+	s = 1
+	while u != 0:
+		if u & 1:
+			s = (s * g)%p
+		u >>= 1
+		g = (g * g)%p;
+   	return s
+
+
 def strxor(a, b):
     if len(a) > len(b):
         return "".join([chr(ord(x) ^ ord(y)) for (x, y) in zip(a[:len(b)], b)])
@@ -367,6 +377,12 @@ def md4_round(block, s):
     o = [s[0]+a & 0xffffffff, s[1]+b & 0xffffffff, s[2]+c & 0xffffffff, s[3]+d & 0xffffffff]
 
     return o
+
+
+def HMAC(m, k, blocklen, hf, ipad=0x36, opad=0x5c):
+	ipad_key = strxor(chr(ipad) * blocklen, k)
+	opad_key = strxor(chr(opad) * blocklen, k)
+	return hf(opad_key + hf(ipad_key + m))
 
 
 def hamming_distance(s1, s2):
