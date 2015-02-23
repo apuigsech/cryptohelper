@@ -26,6 +26,7 @@ import math
 import struct
 import itertools
 import operator
+import random
 from Crypto.Cipher import AES
 
 
