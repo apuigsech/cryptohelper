@@ -29,6 +29,16 @@ import operator
 from Crypto.Cipher import AES
 
 
+
+def text_to_int(t):
+	return reduce(lambda x, y : (x << 8) + y, map(ord, t))
+
+
+def int_to_text(i, size=128):
+	t = "".join([chr((i >> j) & 0xff) for j in reversed(range(0, size << 3, 8))])
+	return t.lstrip("\x00")
+
+
 def mt_init(seed):
 	mt_idx = 0
 	mt_matrix = []
