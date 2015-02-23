@@ -558,3 +558,73 @@ def keystream_from_many_time_pad(ct_list, freq):
 			ks_str += "\x00"
 
 	return ks_str
+
+
+def gcd(a, b):
+    while b:
+        print a,b
+        r = max(a,b)%min(a,b)
+        a = min(a,b)
+        b = r
+    return a
+
+
+def egcd(a, b):
+    u, u1 = 1, 0
+    v, v1 = 0, 1
+    g, g1 = a, b
+    while g1:
+        q = g // g1
+        u, u1 = u1, u - q * u1
+        v, v1 = v1, v - q * v1
+        g, g1 = g1, g - q * g1
+    return u, v, g
+
+
+def invmod(a,n):
+    (xa,xb,g) = egcd(a,n)
+    if (g != 1):
+        return None
+    else:
+        return xa % n
+
+
+def generate_prime(bits):
+        p = 0
+        while (p%2 == 0 or pow(2, (p-1), p) != 1):
+                p = random.randint(2**(bits-1), 2**bits-1)
+        return p
+
+
+def RSA_generate_keypair(keysize):
+    d = None
+    while d == None:
+        p = generate_prime(keysize/2)
+        while True: 
+            q = generate_prime(keysize/2)
+            if q != p:
+                break
+
+        print p,q
+        N = p*q
+        et = (p-1)*(q-1)
+        e = 3
+        d = invmod(e, et)
+
+    return [e, N],[d,N]
+
+
+def RSA_encrypt_int(i, pubkey):
+    return pow(i, pubkey[0], pubkey[1])
+
+
+def RSA_decrypt_int(i, privkey):
+    return pow(i, privkey[0], privkey[1])
+
+
+def encrypt_block_RSA(pt, pubkey):
+    return int_to_text(RSA_encrypt_int(text_to_int(pt), pubkey))
+    
+
+def decrypt_block_RSA(ct, privkey):
+    return int_to_text(RSA_decrypt_int(text_to_int(ct), privkey))
