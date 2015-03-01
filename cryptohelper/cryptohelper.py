@@ -27,6 +27,7 @@ import struct
 import itertools
 import operator
 import random
+import gmpy2
 from Crypto.Cipher import AES
 
 
@@ -606,7 +607,6 @@ def RSA_generate_keypair(keysize):
             if q != p:
                 break
 
-        print p,q
         N = p*q
         et = (p-1)*(q-1)
         e = 3
@@ -629,3 +629,14 @@ def encrypt_block_RSA(pt, pubkey):
 
 def decrypt_block_RSA(ct, privkey):
     return int_to_text(RSA_decrypt_int(text_to_int(ct), privkey))
+
+
+def RSA_fact_close_pq(N):
+	n = gmpy2.mpz(N)
+	a = gmpy2.isqrt(n) + 1
+	p = int(a - gmpy2.isqrt(a**2 - N))
+	q = int(a + gmpy2.isqrt(a**2 - N))
+	if p*q == N:
+		return p,q
+	else:
+		return None,None
