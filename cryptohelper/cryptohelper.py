@@ -634,9 +634,10 @@ def decrypt_block_RSA(ct, privkey):
 def RSA_fact_close_pq(N):
 	n = gmpy2.mpz(N)
 	a = gmpy2.isqrt(n) + 1
-	p = int(a - gmpy2.isqrt(a**2 - N))
-	q = int(a + gmpy2.isqrt(a**2 - N))
-	if p*q == N:
-		return p,q
-	else:
-		return None,None
+	while a < n:
+		p = int(a - gmpy2.isqrt(a**2 - N))
+		q = int(a + gmpy2.isqrt(a**2 - N))
+		if p*q == N:
+			return p,
+		a = a+1
+	return None,None
