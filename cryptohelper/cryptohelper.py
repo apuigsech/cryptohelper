@@ -81,7 +81,7 @@ def mt_next(state):
 	return y
 
 
-def modexp (g, u, p):
+def modexp(g, u, p):
 	s = 1
 	while u != 0:
 		if u & 1:
@@ -589,6 +589,19 @@ def invmod(a,n):
         return None
     else:
         return xa % n
+
+
+def rootmod(e, y, n):
+	u,v,g = egcd(e, n-1)
+	if g == 1:
+		i = invmod(e, n-1)
+		return pow(y, i, n)
+	elif g == 2:
+		y = pow(y, (n+1)/4, n)
+		e = e/2
+		return rootmod(e, y, n)
+	else:
+		return None
 
 
 def generate_prime(bits):
