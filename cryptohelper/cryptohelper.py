@@ -654,3 +654,37 @@ def RSA_fact_close_pq(N):
 			return p,
 		a = a+1
 	return None,None
+
+def WEP_seed_to_keys(s):
+        keys = ['','','','']
+
+        for i in range(0,4):
+                for j in range(0,5):
+                        s = (s * 0x343fd + 0x269ec3) & 0xffffffff;
+                        keys[i] += "%x" % ((s >> 16) & 0xff)
+        return keys
+
+
+def WEP_pass_to_seed(p):
+        pseed = [0,0,0,0]
+        keys = ['','','','']
+        for i in range(0, len(p)):
+                pseed[i%4] ^= ord(p[i])
+        return pseed[0] | (pseed[1] << 8) | (pseed[2] << 16) | (pseed[3] << 24);
+
+
+def WEP_pass_to_keys(p):
+        seed = WEP_pass_to_seed(p)
+        keys = WEP_seed_to_keys(seed)
+        return keys
+
+
+def WEP_key_to_seed(key):
+        for s1 in range(0,128):
+                for s2 in range(0,128):
+                        for s3 in range(0,128):
+                                s4=120
+                                seed = s1 | (s2 << 8) | (s3 << 16) | (s4 << 24)
+                                k = WEP_seed_to_keys(seed)
+                                if key in k:
+                                        return seed
